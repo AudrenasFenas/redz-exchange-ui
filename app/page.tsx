@@ -6,6 +6,7 @@ import { SwapInterface } from '@/components/SwapInterface';
 import { PoolInterface } from '@/components/PoolInterface';
 import { LaunchInterface } from '@/components/LaunchInterface';
 import { StatsPanel } from '@/components/StatsPanel';
+import { BalancesPanel } from '@/components/BalancesPanel';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'swap' | 'pool' | 'launch'>('swap');
@@ -41,6 +42,11 @@ export default function Home() {
 
         {/* Stats Panel */}
         <StatsPanel />
+
+        {/* Balances & Top-up */}
+        <div className="max-w-6xl mx-auto">
+          <BalancesPanel />
+        </div>
 
         {/* Main Interface */}
         <div className="max-w-6xl mx-auto">

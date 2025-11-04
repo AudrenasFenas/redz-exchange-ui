@@ -135,3 +135,14 @@ export const APP_CONFIG = {
     github: process.env.NEXT_PUBLIC_GITHUB_URL || 'https://github.com/redzexchange'
   }
 };
+
+// Feature flags / integrations
+export const APP_FEATURES = {
+  enableLocalWalletGeneration: (process.env.NEXT_PUBLIC_ENABLE_LOCAL_WALLET_GENERATION || '').toLowerCase() === 'true',
+  enableQrCode: (process.env.NEXT_PUBLIC_ENABLE_QR || 'true').toLowerCase() !== 'false',
+  onramp: {
+    moonpayUrl: process.env.NEXT_PUBLIC_ONRAMP_MOONPAY_URL || '',
+    transakUrl: process.env.NEXT_PUBLIC_ONRAMP_TRANSAK_URL || '',
+    rampUrl: process.env.NEXT_PUBLIC_ONRAMP_RAMP_URL || '',
+  },
+};

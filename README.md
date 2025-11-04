@@ -58,6 +58,16 @@ NEXT_PUBLIC_APP_VERSION=1.0.0
 # Optional: override default APIs
 NEXT_PUBLIC_PRICE_API=https://price.jup.ag/v6/price
 NEXT_PUBLIC_TOKEN_LIST_URL=https://token.jup.ag/all
+
+# Optional: Top-up and features
+NEXT_PUBLIC_ENABLE_QR=true
+# Show advanced local wallet generation (NOT recommended for production)
+NEXT_PUBLIC_ENABLE_LOCAL_WALLET_GENERATION=false
+# Optional on-ramp provider URLs (include your API keys and params if required)
+# Example (append address as query param):
+# NEXT_PUBLIC_ONRAMP_MOONPAY_URL=https://buy.moonpay.com?apiKey=YOUR_KEY
+# NEXT_PUBLIC_ONRAMP_TRANSAK_URL=https://global.transak.com?apiKey=YOUR_KEY
+# NEXT_PUBLIC_ONRAMP_RAMP_URL=https://buy.ramp.network?hostApiKey=YOUR_KEY
 ```
 
 ## 📡 Live Prices & Token Metadata
@@ -69,6 +79,12 @@ NEXT_PUBLIC_TOKEN_LIST_URL=https://token.jup.ag/all
    - `useTokenList()` from `lib/tokens`
    - `PriceTicker` shows live prices in the navbar
    - `TokenSelector` provides searchable token selection in the swap UI
+
+   ## 💰 Balances and Top-up
+
+   - `BalancesPanel` shows your SOL and tracked token balances with USD values
+   - `TopUpModal` lets users copy deposit address, scan a QR, and open optional on-ramp links
+   - If disconnected, prompts to connect the wallet; optional advanced local address generation (guarded by env flag)
 
 ## 📦 Installation
 
