@@ -3,6 +3,7 @@
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { APP_CONFIG } from '@/lib/constants';
+import { PriceTicker } from './PriceTicker';
 
 export function Navbar() {
   const { connected, publicKey } = useWallet();
@@ -47,6 +48,10 @@ export function Navbar() {
             )}
             <WalletMultiButton className="!bg-primary-600 hover:!bg-primary-700 !rounded-lg !text-sm !font-semibold !px-4 !py-2 !h-auto" />
           </div>
+        </div>
+        {/* Ticker */}
+        <div className="mt-2 border-t border-gray-800 pt-2">
+          <PriceTicker />
         </div>
       </div>
     </nav>

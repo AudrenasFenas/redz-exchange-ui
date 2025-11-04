@@ -55,7 +55,20 @@ NEXT_PUBLIC_RPC_URL=https://api.mainnet-beta.solana.com
 NEXT_PUBLIC_PROGRAM_ID=9HiX1zn36tRsmqJp2F1sGFNVFimoVcbe9JMGSUo9LsiV
 NEXT_PUBLIC_APP_NAME=RedzExchange
 NEXT_PUBLIC_APP_VERSION=1.0.0
+# Optional: override default APIs
+NEXT_PUBLIC_PRICE_API=https://price.jup.ag/v6/price
+NEXT_PUBLIC_TOKEN_LIST_URL=https://token.jup.ag/all
 ```
+
+## 📡 Live Prices & Token Metadata
+
+- Real-time prices powered by Jupiter Price API (polled every 15s)
+- Token metadata (symbol, name, logo) from Jupiter Token List
+- Components and hooks:
+   - `usePrices(mints, intervalMs)` from `lib/prices`
+   - `useTokenList()` from `lib/tokens`
+   - `PriceTicker` shows live prices in the navbar
+   - `TokenSelector` provides searchable token selection in the swap UI
 
 ## 📦 Installation
 

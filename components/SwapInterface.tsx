@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import { POPULAR_TOKENS } from '@/lib/constants';
 import { usePrices } from '@/lib/prices';
 import { useTokenList } from '@/lib/tokens';
+import { TokenSelector } from './TokenSelector';
 import { createSwapInstruction, calculateSwapOutput, calculatePriceImpact } from '@/lib/instructions';
 
 export function SwapInterface() {
@@ -20,6 +21,7 @@ export function SwapInterface() {
   const [toAmount, setToAmount] = useState('');
   const [slippage, setSlippage] = useState(0.5);
   const [isLoading, setIsLoading] = useState(false);
+  const [selecting, setSelecting] = useState<null | 'from' | 'to'>(null);
   const { prices } = usePrices([fromToken.mint, toToken.mint], 15000);
   const { getByMint } = useTokenList();
 
@@ -97,6 +99,8 @@ export function SwapInterface() {
   const fromPrice = prices[fromToken.mint];
   const toPrice = prices[toToken.mint];
   const rate = fromPrice && toPrice ? (fromPrice / toPrice) : undefined;
+  const fromUsd = fromPrice && fromAmount ? (Number(fromAmount) * fromPrice) : undefined;
+  const toUsd = toPrice && toAmount ? (Number(toAmount) * toPrice) : undefined;
 
   return (
     <div className="max-w-md mx-auto">
@@ -121,7 +125,7 @@ export function SwapInterface() {
             placeholder="0.0"
             className="flex-1 bg-transparent text-2xl font-semibold text-white placeholder-gray-500 outline-none"
           />
-          <div className="flex items-center space-x-2 bg-gray-600 rounded-lg px-3 py-2">
+          <button onClick={() => setSelecting('from')} className="flex items-center space-x-2 bg-gray-600 rounded-lg px-3 py-2 hover:bg-gray-500">
             {(() => {
               const t = getByMint(fromToken.mint);
               const src = t?.logoURI || fromToken.logoURI;
@@ -133,8 +137,11 @@ export function SwapInterface() {
               );
             })()}
             <span className="font-semibold text-white">{fromToken.symbol}</span>
-          </div>
+          </button>
         </div>
+        {fromUsd !== undefined && !isNaN(fromUsd) && (
+          <div className="text-xs text-gray-400 mt-1">≈ ${fromUsd.toFixed(2)}</div>
+        )}
       </div>
 
       {/* Swap Button */}
@@ -161,7 +168,7 @@ export function SwapInterface() {
             placeholder="0.0"
             className="flex-1 bg-transparent text-2xl font-semibold text-white placeholder-gray-500 outline-none"
           />
-          <div className="flex items-center space-x-2 bg-gray-600 rounded-lg px-3 py-2">
+          <button onClick={() => setSelecting('to')} className="flex items-center space-x-2 bg-gray-600 rounded-lg px-3 py-2 hover:bg-gray-500">
             {(() => {
               const t = getByMint(toToken.mint);
               const src = t?.logoURI || toToken.logoURI;
@@ -173,8 +180,11 @@ export function SwapInterface() {
               );
             })()}
             <span className="font-semibold text-white">{toToken.symbol}</span>
-          </div>
+          </button>
         </div>
+        {toUsd !== undefined && !isNaN(toUsd) && (
+          <div className="text-xs text-gray-400 mt-1">≈ ${toUsd.toFixed(2)}</div>
+        )}
       </div>
 
       {/* Swap Details */}
@@ -213,6 +223,26 @@ export function SwapInterface() {
       >
         {!publicKey ? 'Connect Wallet' : isLoading ? 'Swapping...' : 'Swap'}
       </button>
+
+      {/* Token selectors */}
+      <TokenSelector
+        open={selecting === 'from'}
+        onClose={() => setSelecting(null)}
+        onSelect={(t) => {
+          setFromToken({ ...fromToken, ...t });
+          setSelecting(null);
+          if (fromAmount) setToAmount(calculateOutputAmount(fromAmount));
+        }}
+      />
+      <TokenSelector
+        open={selecting === 'to'}
+        onClose={() => setSelecting(null)}
+        onSelect={(t) => {
+          setToToken({ ...toToken, ...t });
+          setSelecting(null);
+          if (fromAmount) setToAmount(calculateOutputAmount(fromAmount));
+        }}
+      />
     </div>
   );
 }
