@@ -2,6 +2,10 @@
 
 Advanced DeFi Protocol on Solana - Production-Ready Frontend
 
+[![Deploy to Production](https://github.com/AudrenasFenas/redz-exchange-ui/actions/workflows/deploy.yml/badge.svg)](https://github.com/AudrenasFenas/redz-exchange-ui/actions/workflows/deploy.yml)
+
+🔗 **Live Demo**: [https://redz-exchange-ui.vercel.app](https://redz-exchange-ui.vercel.app)
+
 ## 🚀 Features
 
 - **Swap Interface**: Trade tokens with optimal pricing
@@ -12,11 +16,46 @@ Advanced DeFi Protocol on Solana - Production-Ready Frontend
 
 ## 🛠 Tech Stack
 
-- **Framework**: Next.js 14 with App Router
+- **Framework**: Next.js 16 with App Router
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **Blockchain**: Solana Web3.js
 - **Wallet**: Solana Wallet Adapter
+- **Deployment**: Vercel with GitHub Actions CI/CD
+
+## 📦 Deployment
+
+### Automatic Deployment
+
+This project is configured for automatic deployment:
+
+1. **GitHub**: Push to `main` branch triggers deployment
+2. **Vercel**: Automatically deploys via GitHub integration
+3. **CI/CD**: GitHub Actions runs tests and builds
+
+### Manual Deployment
+
+```bash
+# Build and deploy locally
+npm run build:prod
+./deploy.sh
+
+# Or deploy to Vercel
+npm i -g vercel
+vercel --prod
+```
+
+### Environment Variables
+
+Configure these in your deployment platform:
+
+```env
+NEXT_PUBLIC_NETWORK=mainnet
+NEXT_PUBLIC_RPC_URL=https://api.mainnet-beta.solana.com
+NEXT_PUBLIC_PROGRAM_ID=9HiX1zn36tRsmqJp2F1sGFNVFimoVcbe9JMGSUo9LsiV
+NEXT_PUBLIC_APP_NAME=RedzExchange
+NEXT_PUBLIC_APP_VERSION=1.0.0
+```
 
 ## 📦 Installation
 
