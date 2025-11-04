@@ -8,9 +8,6 @@ import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adap
 import { clusterApiUrl } from '@solana/web3.js';
 import { RPC_URL, NETWORK } from '@/lib/constants';
 
-// Import wallet adapter CSS
-require('@solana/wallet-adapter-react-ui/styles.css');
-
 export function AppWalletProvider({ children }: { children: React.ReactNode }) {
   // Use environment-based network configuration
   const network = NETWORK === 'mainnet' ? WalletAdapterNetwork.Mainnet : WalletAdapterNetwork.Devnet;

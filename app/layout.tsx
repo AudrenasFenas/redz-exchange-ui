@@ -1,4 +1,5 @@
 import './globals.css';
+import '@solana/wallet-adapter-react-ui/styles.css';
 import { Inter } from 'next/font/google';
 import { AppWalletProvider } from '@/components/AppWalletProvider';
 import { Toaster } from 'react-hot-toast';
