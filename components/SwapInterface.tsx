@@ -6,6 +6,8 @@ import { PublicKey, Transaction } from '@solana/web3.js';
 import { ArrowUpDown, Settings } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { POPULAR_TOKENS } from '@/lib/constants';
+import { usePrices } from '@/lib/prices';
+import { useTokenList } from '@/lib/tokens';
 import { createSwapInstruction, calculateSwapOutput, calculatePriceImpact } from '@/lib/instructions';
 
 export function SwapInterface() {
@@ -18,6 +20,8 @@ export function SwapInterface() {
   const [toAmount, setToAmount] = useState('');
   const [slippage, setSlippage] = useState(0.5);
   const [isLoading, setIsLoading] = useState(false);
+  const { prices } = usePrices([fromToken.mint, toToken.mint], 15000);
+  const { getByMint } = useTokenList();
 
   // Mock pool data for demonstration
   const mockPoolData = {
@@ -90,6 +94,10 @@ export function SwapInterface() {
     mockPoolData.reserveB
   ) : 0;
 
+  const fromPrice = prices[fromToken.mint];
+  const toPrice = prices[toToken.mint];
+  const rate = fromPrice && toPrice ? (fromPrice / toPrice) : undefined;
+
   return (
     <div className="max-w-md mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -114,7 +122,16 @@ export function SwapInterface() {
             className="flex-1 bg-transparent text-2xl font-semibold text-white placeholder-gray-500 outline-none"
           />
           <div className="flex items-center space-x-2 bg-gray-600 rounded-lg px-3 py-2">
-            <div className="w-6 h-6 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full"></div>
+            {(() => {
+              const t = getByMint(fromToken.mint);
+              const src = t?.logoURI || fromToken.logoURI;
+              return src ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={src} alt={fromToken.symbol} className="w-6 h-6 rounded-full" />
+              ) : (
+                <div className="w-6 h-6 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full" />
+              );
+            })()}
             <span className="font-semibold text-white">{fromToken.symbol}</span>
           </div>
         </div>
@@ -145,7 +162,16 @@ export function SwapInterface() {
             className="flex-1 bg-transparent text-2xl font-semibold text-white placeholder-gray-500 outline-none"
           />
           <div className="flex items-center space-x-2 bg-gray-600 rounded-lg px-3 py-2">
-            <div className="w-6 h-6 bg-gradient-to-r from-green-400 to-blue-500 rounded-full"></div>
+            {(() => {
+              const t = getByMint(toToken.mint);
+              const src = t?.logoURI || toToken.logoURI;
+              return src ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={src} alt={toToken.symbol} className="w-6 h-6 rounded-full" />
+              ) : (
+                <div className="w-6 h-6 bg-gradient-to-r from-green-400 to-blue-500 rounded-full" />
+              );
+            })()}
             <span className="font-semibold text-white">{toToken.symbol}</span>
           </div>
         </div>
@@ -160,6 +186,12 @@ export function SwapInterface() {
               {priceImpact.toFixed(2)}%
             </span>
           </div>
+          {rate && (
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-gray-400">Rate</span>
+              <span className="text-gray-300">1 {fromToken.symbol} ≈ {rate.toFixed(6)} {toToken.symbol}</span>
+            </div>
+          )}
           <div className="flex justify-between items-center mb-1">
             <span className="text-gray-400">Fee</span>
             <span className="text-gray-300">0.3%</span>
