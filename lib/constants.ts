@@ -1,7 +1,49 @@
 // Program configuration
 export const PROGRAM_ID = process.env.NEXT_PUBLIC_PROGRAM_ID || '9HiX1zn36tRsmqJp2F1sGFNVFimoVcbe9JMGSUo9LsiV';
-export const NETWORK = process.env.NEXT_PUBLIC_NETWORK || 'devnet';
-export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://api.devnet.solana.com';
+export const NETWORK = process.env.NEXT_PUBLIC_NETWORK || 'mainnet';
+
+// RPC URL Configuration with fallbacks
+export const RPC_ENDPOINTS = {
+  mainnet: [
+    // Primary high-performance RPC endpoints
+    'https://solana-api.projectserum.com',
+    'https://rpc.ankr.com/solana',
+    'https://solana-mainnet.g.alchemy.com/v2/demo',
+    'https://api.mainnet-beta.solana.com',
+    // GenesysGo (Premium)
+    'https://ssc-dao.genesysgo.net',
+    // Triton (Fast)
+    'https://solana-mainnet.phantom.tech',
+    // QuickNode (Reliable)
+    'https://api.quicknode.com/solana',
+  ],
+  devnet: [
+    'https://api.devnet.solana.com',
+    'https://rpc.ankr.com/solana_devnet',
+    'https://solana-devnet.g.alchemy.com/v2/demo',
+  ],
+  testnet: [
+    'https://api.testnet.solana.com',
+    'https://rpc.ankr.com/solana_testnet',
+  ]
+};
+
+// Get primary RPC URL based on network
+export const getRpcUrl = (network: string = NETWORK): string => {
+  const endpoints = RPC_ENDPOINTS[network as keyof typeof RPC_ENDPOINTS];
+  return endpoints?.[0] || RPC_ENDPOINTS.mainnet[0];
+};
+
+// Use environment variable or get default RPC URL
+export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || getRpcUrl(NETWORK);
+
+// RPC Configuration with retry logic
+export const RPC_CONFIG = {
+  commitment: 'confirmed' as const,
+  timeout: 30000,
+  retryCount: 3,
+  retryDelay: 1000,
+};
 
 // RedzExchange instruction types
 export enum RedzInstruction {
