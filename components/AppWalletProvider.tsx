@@ -7,16 +7,15 @@ import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { clusterApiUrl } from '@solana/web3.js';
 import { RPC_URL, NETWORK } from '@/lib/constants';
-
-// Import wallet adapter CSS
-require('@solana/wallet-adapter-react-ui/styles.css');
+import { getConnection } from '@/lib/rpc';
 
 export function AppWalletProvider({ children }: { children: React.ReactNode }) {
   // Use environment-based network configuration
   const network = NETWORK === 'mainnet' ? WalletAdapterNetwork.Mainnet : WalletAdapterNetwork.Devnet;
   const endpoint = useMemo(() => {
-    // Use custom RPC URL if provided, otherwise use default cluster URL
-    return RPC_URL !== clusterApiUrl(network) ? RPC_URL : clusterApiUrl(network);
+    // Use optimized RPC URL with failover support
+    const connection = getConnection();
+    return RPC_URL || clusterApiUrl(network);
   }, [network]);
 
   const wallets = useMemo(

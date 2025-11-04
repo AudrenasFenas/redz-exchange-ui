@@ -97,8 +97,9 @@ npm run dev
 npm run type-check
 
 # Linting
-npm run lint
-npm run lint:fix
+# Linting
+npm run lint          # Check for linting errors
+npm run lint:fix      # Auto-fix linting issues
 ```
 
 ## 🚀 Production Build

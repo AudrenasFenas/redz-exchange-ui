@@ -13,6 +13,8 @@
     "start:prod": "NODE_ENV=production next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
+    "rpc:generate": "./scripts/rpc-generator.sh",
+    "rpc:test": "node -e \"require('./lib/rpc').rpcManager.getAllEndpointStatuses().then(console.log)\"",
     "type-check": "tsc --noEmit",
     "export": "next export",
     "analyze": "ANALYZE=true next build"
