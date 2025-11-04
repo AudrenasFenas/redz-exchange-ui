@@ -1,3 +1,0 @@
-module.exports=[18499,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(23315);a.n(d("[project]/redz-exchange-ui/node_modules/next/dist/client/components/builtin/global-error.js <module evaluation>"))},32912,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(23315);a.n(d("[project]/redz-exchange-ui/node_modules/next/dist/client/components/builtin/global-error.js"))},89079,a=>{"use strict";a.i(18499);var b=a.i(32912);a.n(b)}];
-
-//# sourceMappingURL=c2c72_next_dist_client_components_builtin_global-error_0bb7ca94.js.map
