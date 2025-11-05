@@ -6,7 +6,7 @@ import { Plus, Minus, TrendingUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { POPULAR_TOKENS } from '@/lib/constants';
 import { requireWallet, validateFields } from '@/lib/wallet-utils';
-import { Button, TabNavigation, Input } from './ui';
+import { Button, Card, TabNavigation, Input } from './ui';
 
 export function PoolInterface() {
   const { publicKey } = useWallet();
@@ -94,7 +94,7 @@ export function PoolInterface() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Main Interface */}
-        <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
+        <Card className="p-6">
           {activeTab === 'add' && (
             <div>
               <h3 className="text-xl font-bold text-white mb-6">Add Liquidity</h3>
@@ -213,10 +213,10 @@ export function PoolInterface() {
               </Button>
             </div>
           )}
-        </div>
+        </Card>
 
         {/* Pool List */}
-        <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
+        <Card className="p-6">
           <h3 className="text-xl font-bold text-white mb-6">Active Pools</h3>
           
           <div className="space-y-4">
@@ -253,7 +253,7 @@ export function PoolInterface() {
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

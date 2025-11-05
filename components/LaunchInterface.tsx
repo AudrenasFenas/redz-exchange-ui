@@ -5,7 +5,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { Rocket, Clock, TrendingUp, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { requireWallet, validateFields } from '@/lib/wallet-utils';
-import { Button, TabNavigation, Input } from './ui';
+import { Button, Card, TabNavigation, Input } from './ui';
 
 export function LaunchInterface() {
   const { publicKey } = useWallet();
@@ -128,7 +128,7 @@ export function LaunchInterface() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {mockLaunches.map((launch) => (
-              <div key={launch.id} className="bg-gray-800/30 backdrop-blur-sm rounded-xl border border-gray-700 overflow-hidden">
+              <Card key={launch.id} className="overflow-hidden">
                 {/* Launch Header */}
                 <div className="p-6 pb-4">
                   <div className="flex items-center justify-between mb-4">
@@ -225,7 +225,7 @@ export function LaunchInterface() {
                     </div>
                   </div>
                 )}
-              </div>
+              </Card>
             ))}
           </div>
         </div>
@@ -238,7 +238,7 @@ export function LaunchInterface() {
             <p className="text-gray-400">Launch your token and raise funds from the community</p>
           </div>
 
-          <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-8 border border-gray-700">
+          <Card className="p-8">
             <div className="space-y-6">
               <Input
                 label="Token Mint Address *"
@@ -310,7 +310,7 @@ export function LaunchInterface() {
                 <span>{!publicKey ? 'Connect Wallet' : 'Create Launch'}</span>
               </Button>
             </div>
-          </div>
+          </Card>
         </div>
       )}
     </div>
