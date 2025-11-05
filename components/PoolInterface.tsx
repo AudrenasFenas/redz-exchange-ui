@@ -5,6 +5,8 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { Plus, Minus, TrendingUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { POPULAR_TOKENS } from '@/lib/constants';
+import { requireWallet, validateFields } from '@/lib/wallet-utils';
+import { Button, TabNavigation, Input } from './ui';
 
 export function PoolInterface() {
   const { publicKey } = useWallet();
@@ -44,13 +46,11 @@ export function PoolInterface() {
   ];
 
   const handleAddLiquidity = async () => {
-    if (!publicKey) {
-      toast.error('Please connect your wallet');
+    if (!requireWallet(publicKey)) {
       return;
     }
 
-    if (!amountA || !amountB) {
-      toast.error('Please enter both token amounts');
+    if (!validateFields({ amountA, amountB }, 'Please enter both token amounts')) {
       return;
     }
 
@@ -63,13 +63,11 @@ export function PoolInterface() {
   };
 
   const handleCreatePool = async () => {
-    if (!publicKey) {
-      toast.error('Please connect your wallet');
+    if (!requireWallet(publicKey)) {
       return;
     }
 
-    if (!newTokenA || !newTokenB || !initialAmountA || !initialAmountB) {
-      toast.error('Please fill all fields');
+    if (!validateFields({ newTokenA, newTokenB, initialAmountA, initialAmountB }, 'Please fill all fields')) {
       return;
     }
 
@@ -84,29 +82,15 @@ export function PoolInterface() {
   return (
     <div className="max-w-4xl mx-auto">
       {/* Tab Navigation */}
-      <div className="flex justify-center mb-8">
-        <div className="bg-gray-700/50 rounded-xl p-1">
-          <div className="flex space-x-1">
-            {(['add', 'remove', 'create'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                  activeTab === tab
-                    ? 'bg-primary-600 text-white'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                {tab === 'add' && <Plus className="w-4 h-4 inline mr-1" />}
-                {tab === 'remove' && <Minus className="w-4 h-4 inline mr-1" />}
-                {tab === 'create' && <TrendingUp className="w-4 h-4 inline mr-1" />}
-                {tab.charAt(0).toUpperCase() + tab.slice(1)} {tab !== 'create' && 'Liquidity'}
-                {tab === 'create' && ' Pool'}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      <TabNavigation
+        tabs={[
+          { id: 'add' as const, label: 'Add Liquidity', icon: <Plus className="w-4 h-4" /> },
+          { id: 'remove' as const, label: 'Remove Liquidity', icon: <Minus className="w-4 h-4" /> },
+          { id: 'create' as const, label: 'Create Pool', icon: <TrendingUp className="w-4 h-4" /> },
+        ]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Main Interface */}
@@ -157,13 +141,13 @@ export function PoolInterface() {
                 </div>
               </div>
 
-              <button
+              <Button
                 onClick={handleAddLiquidity}
                 disabled={!publicKey}
-                className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-600 text-white font-semibold py-3 rounded-xl transition-colors"
+                fullWidth
               >
                 {!publicKey ? 'Connect Wallet' : 'Add Liquidity'}
-              </button>
+              </Button>
             </div>
           )}
 
@@ -172,49 +156,37 @@ export function PoolInterface() {
               <h3 className="text-xl font-bold text-white mb-6">Create New Pool</h3>
               
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm text-gray-400 mb-2">Token A Mint Address</label>
-                  <input
-                    type="text"
-                    value={newTokenA}
-                    onChange={(e) => setNewTokenA(e.target.value)}
-                    placeholder="Enter token mint address..."
-                    className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-500 outline-none focus:border-primary-500"
-                  />
-                </div>
+                <Input
+                  label="Token A Mint Address"
+                  type="text"
+                  value={newTokenA}
+                  onChange={(e) => setNewTokenA(e.target.value)}
+                  placeholder="Enter token mint address..."
+                />
                 
-                <div>
-                  <label className="block text-sm text-gray-400 mb-2">Token B Mint Address</label>
-                  <input
-                    type="text"
-                    value={newTokenB}
-                    onChange={(e) => setNewTokenB(e.target.value)}
-                    placeholder="Enter token mint address..."
-                    className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-500 outline-none focus:border-primary-500"
-                  />
-                </div>
+                <Input
+                  label="Token B Mint Address"
+                  type="text"
+                  value={newTokenB}
+                  onChange={(e) => setNewTokenB(e.target.value)}
+                  placeholder="Enter token mint address..."
+                />
                 
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-2">Initial Amount A</label>
-                    <input
-                      type="number"
-                      value={initialAmountA}
-                      onChange={(e) => setInitialAmountA(e.target.value)}
-                      placeholder="0.0"
-                      className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-500 outline-none focus:border-primary-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-2">Initial Amount B</label>
-                    <input
-                      type="number"
-                      value={initialAmountB}
-                      onChange={(e) => setInitialAmountB(e.target.value)}
-                      placeholder="0.0"
-                      className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-500 outline-none focus:border-primary-500"
-                    />
-                  </div>
+                  <Input
+                    label="Initial Amount A"
+                    type="number"
+                    value={initialAmountA}
+                    onChange={(e) => setInitialAmountA(e.target.value)}
+                    placeholder="0.0"
+                  />
+                  <Input
+                    label="Initial Amount B"
+                    type="number"
+                    value={initialAmountB}
+                    onChange={(e) => setInitialAmountB(e.target.value)}
+                    placeholder="0.0"
+                  />
                 </div>
                 
                 <div>
@@ -231,13 +203,14 @@ export function PoolInterface() {
                 </div>
               </div>
 
-              <button
+              <Button
                 onClick={handleCreatePool}
                 disabled={!publicKey}
-                className="w-full mt-6 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-600 text-white font-semibold py-3 rounded-xl transition-colors"
+                fullWidth
+                className="mt-6"
               >
                 {!publicKey ? 'Connect Wallet' : 'Create Pool'}
-              </button>
+              </Button>
             </div>
           )}
         </div>
