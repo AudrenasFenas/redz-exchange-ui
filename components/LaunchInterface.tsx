@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Rocket, Clock, TrendingUp, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { requireWallet, validateFields } from '@/lib/wallet-utils';
+import { Button, TabNavigation, Input } from './ui';
 
 export function LaunchInterface() {
   const { publicKey } = useWallet();
@@ -56,13 +58,11 @@ export function LaunchInterface() {
   ];
 
   const handleCreateLaunch = async () => {
-    if (!publicKey) {
-      toast.error('Please connect your wallet');
+    if (!requireWallet(publicKey)) {
       return;
     }
 
-    if (!tokenMint || !tokenAmount || !targetAmount) {
-      toast.error('Please fill all required fields');
+    if (!validateFields({ tokenMint, tokenAmount, targetAmount }, 'Please fill all required fields')) {
       return;
     }
 
@@ -75,13 +75,11 @@ export function LaunchInterface() {
   };
 
   const handleParticipate = async (launchId: number) => {
-    if (!publicKey) {
-      toast.error('Please connect your wallet');
+    if (!requireWallet(publicKey)) {
       return;
     }
 
-    if (!participateAmount) {
-      toast.error('Please enter participation amount');
+    if (!validateFields({ participateAmount }, 'Please enter participation amount')) {
       return;
     }
 
@@ -112,27 +110,14 @@ export function LaunchInterface() {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Tab Navigation */}
-      <div className="flex justify-center mb-8">
-        <div className="bg-gray-700/50 rounded-xl p-1">
-          <div className="flex space-x-1">
-            {(['participate', 'create'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                  activeTab === tab
-                    ? 'bg-primary-600 text-white'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                {tab === 'participate' && <Users className="w-4 h-4 inline mr-2" />}
-                {tab === 'create' && <Rocket className="w-4 h-4 inline mr-2" />}
-                {tab === 'participate' ? 'Join Launch' : 'Create Launch'}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      <TabNavigation
+        tabs={[
+          { id: 'participate' as const, label: 'Join Launch', icon: <Users className="w-4 h-4" /> },
+          { id: 'create' as const, label: 'Create Launch', icon: <Rocket className="w-4 h-4" /> },
+        ]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
 
       {activeTab === 'participate' && (
         <div>
@@ -229,13 +214,14 @@ export function LaunchInterface() {
                         placeholder="SOL amount"
                         className="flex-1 bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-500 outline-none focus:border-primary-500"
                       />
-                      <button
+                      <Button
                         onClick={() => handleParticipate(launch.id)}
                         disabled={!publicKey}
-                        className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg transition-colors"
+                        size="sm"
+                        className="!rounded-lg"
                       >
                         Join
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -254,47 +240,32 @@ export function LaunchInterface() {
 
           <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-8 border border-gray-700">
             <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Token Mint Address *
-                </label>
-                <input
-                  type="text"
-                  value={tokenMint}
-                  onChange={(e) => setTokenMint(e.target.value)}
-                  placeholder="Enter your token mint address"
-                  className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-primary-500"
-                />
-              </div>
+              <Input
+                label="Token Mint Address *"
+                type="text"
+                value={tokenMint}
+                onChange={(e) => setTokenMint(e.target.value)}
+                placeholder="Enter your token mint address"
+              />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
-                    Token Amount *
-                  </label>
-                  <input
-                    type="number"
-                    value={tokenAmount}
-                    onChange={(e) => setTokenAmount(e.target.value)}
-                    placeholder="1000000"
-                    className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-primary-500"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Number of tokens to launch</p>
-                </div>
+                <Input
+                  label="Token Amount *"
+                  type="number"
+                  value={tokenAmount}
+                  onChange={(e) => setTokenAmount(e.target.value)}
+                  placeholder="1000000"
+                  helperText="Number of tokens to launch"
+                />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
-                    Target Amount (SOL) *
-                  </label>
-                  <input
-                    type="number"
-                    value={targetAmount}
-                    onChange={(e) => setTargetAmount(e.target.value)}
-                    placeholder="100"
-                    className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-primary-500"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">SOL amount to raise</p>
-                </div>
+                <Input
+                  label="Target Amount (SOL) *"
+                  type="number"
+                  value={targetAmount}
+                  onChange={(e) => setTargetAmount(e.target.value)}
+                  placeholder="100"
+                  helperText="SOL amount to raise"
+                />
               </div>
 
               <div>
@@ -328,14 +299,16 @@ export function LaunchInterface() {
                 </div>
               </div>
 
-              <button
+              <Button
                 onClick={handleCreateLaunch}
                 disabled={!publicKey}
-                className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-600 text-white font-semibold py-4 rounded-xl transition-colors flex items-center justify-center space-x-2"
+                fullWidth
+                size="lg"
+                className="flex items-center justify-center space-x-2"
               >
                 <Rocket className="w-5 h-5" />
                 <span>{!publicKey ? 'Connect Wallet' : 'Create Launch'}</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>

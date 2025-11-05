@@ -8,7 +8,9 @@ import toast from 'react-hot-toast';
 import { POPULAR_TOKENS } from '@/lib/constants';
 import { usePrices } from '@/lib/prices';
 import { useTokenList } from '@/lib/tokens';
+import { requireWallet, validateFields } from '@/lib/wallet-utils';
 import { TokenSelector } from './TokenSelector';
+import { Button, TokenInput } from './ui';
 import { createSwapInstruction, calculateSwapOutput, calculatePriceImpact } from '@/lib/instructions';
 
 export function SwapInterface() {
@@ -60,13 +62,11 @@ export function SwapInterface() {
   };
 
   const handleSwap = async () => {
-    if (!publicKey) {
-      toast.error('Please connect your wallet');
+    if (!requireWallet(publicKey)) {
       return;
     }
 
-    if (!fromAmount || !toAmount) {
-      toast.error('Please enter swap amounts');
+    if (!validateFields({ fromAmount, toAmount }, 'Please enter swap amounts')) {
       return;
     }
 
@@ -112,80 +112,37 @@ export function SwapInterface() {
       </div>
 
       {/* From Token */}
-      <div className="bg-gray-700/50 rounded-xl p-4 mb-2">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm text-gray-400">From</span>
-          <span className="text-sm text-gray-400">Balance: 0.0000</span>
-        </div>
-        <div className="flex items-center space-x-3">
-          <input
-            type="number"
-            value={fromAmount}
-            onChange={(e) => handleFromAmountChange(e.target.value)}
-            placeholder="0.0"
-            className="flex-1 bg-transparent text-2xl font-semibold text-white placeholder-gray-500 outline-none"
-          />
-          <button onClick={() => setSelecting('from')} className="flex items-center space-x-2 bg-gray-600 rounded-lg px-3 py-2 hover:bg-gray-500">
-            {(() => {
-              const t = getByMint(fromToken.mint);
-              const src = t?.logoURI || fromToken.logoURI;
-              return src ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={src} alt={fromToken.symbol} className="w-6 h-6 rounded-full" />
-              ) : (
-                <div className="w-6 h-6 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full" />
-              );
-            })()}
-            <span className="font-semibold text-white">{fromToken.symbol}</span>
-          </button>
-        </div>
-        {fromUsd !== undefined && !isNaN(fromUsd) && (
-          <div className="text-xs text-gray-400 mt-1">≈ ${fromUsd.toFixed(2)}</div>
-        )}
-      </div>
+      <TokenInput
+        label="From"
+        token={fromToken}
+        amount={fromAmount}
+        onAmountChange={handleFromAmountChange}
+        onTokenClick={() => setSelecting('from')}
+        logoURI={getByMint(fromToken.mint)?.logoURI}
+        usdValue={fromUsd !== undefined && !isNaN(fromUsd) ? fromUsd.toFixed(2) : undefined}
+      />
 
       {/* Swap Button */}
       <div className="flex justify-center my-2">
-        <button
+        <Button
+          variant="secondary"
           onClick={handleSwapTokens}
-          className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+          className="!p-2 !rounded-lg"
         >
           <ArrowUpDown className="w-5 h-5 text-gray-300" />
-        </button>
+        </Button>
       </div>
 
       {/* To Token */}
-      <div className="bg-gray-700/50 rounded-xl p-4 mb-4">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm text-gray-400">To</span>
-          <span className="text-sm text-gray-400">Balance: 0.0000</span>
-        </div>
-        <div className="flex items-center space-x-3">
-          <input
-            type="number"
-            value={toAmount}
-            readOnly
-            placeholder="0.0"
-            className="flex-1 bg-transparent text-2xl font-semibold text-white placeholder-gray-500 outline-none"
-          />
-          <button onClick={() => setSelecting('to')} className="flex items-center space-x-2 bg-gray-600 rounded-lg px-3 py-2 hover:bg-gray-500">
-            {(() => {
-              const t = getByMint(toToken.mint);
-              const src = t?.logoURI || toToken.logoURI;
-              return src ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={src} alt={toToken.symbol} className="w-6 h-6 rounded-full" />
-              ) : (
-                <div className="w-6 h-6 bg-gradient-to-r from-green-400 to-blue-500 rounded-full" />
-              );
-            })()}
-            <span className="font-semibold text-white">{toToken.symbol}</span>
-          </button>
-        </div>
-        {toUsd !== undefined && !isNaN(toUsd) && (
-          <div className="text-xs text-gray-400 mt-1">≈ ${toUsd.toFixed(2)}</div>
-        )}
-      </div>
+      <TokenInput
+        label="To"
+        token={toToken}
+        amount={toAmount}
+        onTokenClick={() => setSelecting('to')}
+        logoURI={getByMint(toToken.mint)?.logoURI}
+        readOnly
+        usdValue={toUsd !== undefined && !isNaN(toUsd) ? toUsd.toFixed(2) : undefined}
+      />
 
       {/* Swap Details */}
       {fromAmount && toAmount && (
@@ -216,13 +173,14 @@ export function SwapInterface() {
       )}
 
       {/* Swap Button */}
-      <button
+      <Button
         onClick={handleSwap}
         disabled={!publicKey || !fromAmount || !toAmount || isLoading}
-        className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-4 rounded-xl transition-colors"
+        fullWidth
+        size="lg"
       >
         {!publicKey ? 'Connect Wallet' : isLoading ? 'Swapping...' : 'Swap'}
-      </button>
+      </Button>
 
       {/* Token selectors */}
       <TokenSelector
