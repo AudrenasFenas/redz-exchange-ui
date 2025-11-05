@@ -35,7 +35,10 @@ const nextConfig = {
   },
 
   // Turbopack configuration for Next.js 16+
-  turbopack: {},
+  // Explicitly set root to avoid mis-detection when parent dirs contain lockfiles
+  turbopack: {
+    root: __dirname,
+  },
 
   // Fallback webpack config for compatibility
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
