@@ -27,7 +27,7 @@ declare -A RPC_ENDPOINTS=(
     ["quicknode-demo"]="https://api.quicknode.com/solana"
     ["genesysgo"]="https://ssc-dao.genesysgo.net"
     ["triton-demo"]="https://solana-mainnet.phantom.tech"
-)
+    ["alchemy"]="https://solana-mainnet.g.alchemy.com/v2/${NEXT_PUBLIC_ALCHEMY_API_KEY}"
 
 # Test RPC endpoint function
 test_rpc() {

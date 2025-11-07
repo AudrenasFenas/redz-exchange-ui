@@ -1,0 +1,3 @@
+# .env.local (local only — DO NOT COMMIT)
+NEXT_PUBLIC_ALCHEMY_API_KEY=Wt1fDpl-i0CUocrCJe0m1
+NEXT_PUBLIC_NETWORK=mainnet
