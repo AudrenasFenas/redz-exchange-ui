@@ -169,14 +169,43 @@ ANALYZE=true npm run build
 - Frame options protection
 - Secure wallet connections
 
-## 🧪 Testing
+## 🏗 Smart Contract
+
+The RedzExchange protocol is implemented as a Solana program written in Rust using the Anchor framework. The program handles:
+
+- **Liquidity Pools**: Create and manage AMM pools with constant product formula
+- **Swaps**: Execute token swaps with slippage protection
+- **Liquidity Provision**: Add/remove liquidity from pools
+- **Token Launches**: Launch new tokens with fair distribution mechanisms
+
+### Program Structure
+
+- **Location**: `programs/redz-exchange/`
+- **Program ID**: `9HiX1zn36tRsmqJp2F1sGFNVFimoVcbe9JMGSUo9LsiV`
+- **Instructions**: Initialize config, create pool, add liquidity, swap, launch token, etc.
+
+### Building the Program
 
 ```bash
-# Run tests (when implemented)
-npm test
+# Install Anchor (if not already installed)
+npm i -g @coral-xyz/anchor-cli
 
-# E2E tests (when implemented)  
-npm run test:e2e
+# Build the program
+cd programs/redz-exchange
+anchor build
+
+# Run tests
+anchor test
+```
+
+### Deployment
+
+```bash
+# Deploy to devnet
+anchor deploy --provider.cluster devnet
+
+# Deploy to mainnet
+anchor deploy --provider.cluster mainnet-beta
 ```
 
 ## 📊 Performance

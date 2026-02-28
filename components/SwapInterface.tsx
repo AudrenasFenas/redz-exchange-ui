@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey, Transaction } from '@solana/web3.js';
+import { getOrCreateAssociatedTokenAccountInstructions, createTokenTransferInstruction } from '@/lib/token';
+import { getPoolReserves, estimateTransactionFee } from '@/lib/chain';
 import { ArrowUpDown, Settings } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { POPULAR_TOKENS } from '@/lib/constants';
@@ -10,6 +12,8 @@ import { usePrices } from '@/lib/prices';
 import { useTokenList } from '@/lib/tokens';
 import { TokenSelector } from './TokenSelector';
 import { createSwapInstruction, calculateSwapOutput, calculatePriceImpact } from '@/lib/instructions';
+import ProgrammaticWalletModal from './ProgrammaticWalletModal';
+import ConfirmTransactionModal from './ConfirmTransactionModal';
 
 export function SwapInterface() {
   const { publicKey, sendTransaction } = useWallet();
@@ -24,6 +28,16 @@ export function SwapInterface() {
   const [selecting, setSelecting] = useState<null | 'from' | 'to'>(null);
   const { prices } = usePrices([fromToken.mint, toToken.mint], 15000);
   const { getByMint } = useTokenList();
+  const [walletModalOpen, setWalletModalOpen] = useState(false);
+  const [poolAddress, setPoolAddress] = useState('');
+  const [userTokenAAccount, setUserTokenAAccount] = useState('');
+  const [userTokenBAccount, setUserTokenBAccount] = useState('');
+  const [tokenAVault, setTokenAVault] = useState('');
+  const [tokenBVault, setTokenBVault] = useState('');
+  const [txSignature, setTxSignature] = useState<string | null>(null);
+  const [pendingTx, setPendingTx] = useState<Transaction | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [summaryItems, setSummaryItems] = useState<{ label: string; value: string }[]>([]);
 
   // Mock pool data for demonstration
   const mockPoolData = {
@@ -71,16 +85,93 @@ export function SwapInterface() {
     }
 
     setIsLoading(true);
-    
+
     try {
-      // Mock transaction for demonstration
-      toast.success('Swap functionality will be implemented with real pool data');
-      
-      // In a real implementation, you would:
-      // 1. Find or create associated token accounts
-      // 2. Create swap instruction with real pool accounts
-      // 3. Send transaction
-      
+      // If advanced pool/account info is provided, attempt a real swap
+      if (poolAddress && userTokenAAccount && userTokenBAccount) {
+        // Require vault addresses too for an on-chain swap
+        if (!tokenAVault || !tokenBVault) {
+          toast.error('Please provide pool token vault addresses to execute an on-chain swap (Advanced)');
+        } else {
+          try {
+            const poolPub = new PublicKey(poolAddress);
+            const userAPub = new PublicKey(userTokenAAccount);
+            const userBPub = new PublicKey(userTokenBAccount);
+            const tokenAVaultPub = new PublicKey(tokenAVault);
+            const tokenBVaultPub = new PublicKey(tokenBVault);
+
+            // Convert amounts to raw units
+            const amountIn = Math.floor(Number(fromAmount) * Math.pow(10, fromToken.decimals));
+
+            // Estimate amount out using mock pool data (best-effort). In production, fetch pool reserves.
+            const estimatedOut = calculateSwapOutput(
+              amountIn,
+              mockPoolData.reserveA,
+              mockPoolData.reserveB,
+              mockPoolData.feeRate
+            );
+            const minOut = Math.floor(estimatedOut * (1 - slippage / 100));
+
+            // Prepare user's ATAs for the two tokens
+            const mintAPub = new PublicKey(fromToken.mint);
+            const mintBPub = new PublicKey(toToken.mint);
+
+            const ataARes = await getOrCreateAssociatedTokenAccountInstructions(connection, publicKey as PublicKey, publicKey as PublicKey, mintAPub);
+            const ataBRes = await getOrCreateAssociatedTokenAccountInstructions(connection, publicKey as PublicKey, publicKey as PublicKey, mintBPub);
+
+            const userATAA = ataARes.ata;
+            const userATAB = ataBRes.ata;
+
+            // Transfer user's token A to the pool's token A vault
+            const transferToVault = createTokenTransferInstruction(userATAA, tokenAVaultPub, publicKey as PublicKey, mintAPub, amountIn, fromToken.decimals);
+
+            // Build swap instruction
+            const swapIx = createSwapInstruction(
+              publicKey as PublicKey,
+              poolPub,
+              userATAA,
+              userATAB,
+              tokenAVaultPub,
+              tokenBVaultPub,
+              amountIn,
+              minOut
+            );
+
+            const tx = new Transaction();
+            ataARes.instructions.forEach((i: any) => tx.add(i));
+            ataBRes.instructions.forEach((i: any) => tx.add(i));
+            tx.add(transferToVault);
+            tx.add(swapIx);
+
+            // Fetch reserves and estimate fee
+            const tokenAVaultPubProvided = tokenAVault ? new PublicKey(tokenAVault) : undefined;
+            const tokenBVaultPubProvided = tokenBVault ? new PublicKey(tokenBVault) : undefined;
+            const reserves = await getPoolReserves(connection, poolPub, tokenAVaultPubProvided, tokenBVaultPubProvided).catch(() => null);
+            const feeEstimate = await estimateTransactionFee(connection, tx, publicKey as PublicKey).catch(() => null);
+
+            const items: { label: string; value: string }[] = [
+              { label: 'Pool', value: poolAddress },
+              { label: 'Amount In', value: `${fromToken.symbol} ${Number(fromAmount).toFixed(6)}` },
+              { label: 'Min Out', value: `${toToken.symbol} ${(minOut / Math.pow(10, toToken.decimals)).toFixed(6)}` },
+            ];
+            if (reserves) {
+              items.push({ label: 'Reserve A', value: reserves.tokenAReserve.toString() });
+              items.push({ label: 'Reserve B', value: reserves.tokenBReserve.toString() });
+            }
+            if (feeEstimate !== null) items.push({ label: 'Estimated Fee (lamports)', value: feeEstimate.toString() });
+
+            setSummaryItems(items);
+            setPendingTx(tx);
+            setConfirmOpen(true);
+          } catch (err) {
+            console.error('Swap advanced error', err);
+            toast.error('Failed to build advanced swap transaction');
+          }
+        }
+      } else {
+        // Demo fallback
+        toast.success('Swap (demo) — provide pool and account addresses in Advanced section to execute a real transaction');
+      }
     } catch (error) {
       console.error('Swap error:', error);
       toast.error('Swap failed. Please try again.');
@@ -88,6 +179,21 @@ export function SwapInterface() {
       setIsLoading(false);
     }
   };
+
+      const confirmAndSendPendingSwap = async () => {
+        if (!pendingTx) return null;
+        try {
+          const sig = await sendTransaction(pendingTx, connection);
+          setConfirmOpen(false);
+          setPendingTx(null);
+          setTxSignature(sig);
+          toast.success('Swap submitted: ' + sig);
+          return sig;
+        } catch (err) {
+          toast.error('Failed to submit swap: ' + (err as any)?.message);
+          return null;
+        }
+      };
 
   const priceImpact = fromAmount ? calculatePriceImpact(
     Number(fromAmount) * Math.pow(10, fromToken.decimals),
@@ -106,9 +212,12 @@ export function SwapInterface() {
     <div className="max-w-md mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-white">Swap Tokens</h2>
-        <button className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
-          <Settings className="w-5 h-5 text-gray-300" />
-        </button>
+        <div className="flex items-center space-x-2">
+          <button className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
+            <Settings className="w-5 h-5 text-gray-300" />
+          </button>
+          <button onClick={() => setWalletModalOpen(true)} className="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm">Programmatic Wallet</button>
+        </div>
       </div>
 
       {/* From Token */}
@@ -224,6 +333,46 @@ export function SwapInterface() {
         {!publicKey ? 'Connect Wallet' : isLoading ? 'Swapping...' : 'Swap'}
       </button>
 
+      {/* Advanced (optional) - allow user to paste pool/account addresses to execute real txs */}
+      <div className="mt-4 bg-gray-800/20 rounded-lg p-3 text-sm text-gray-300">
+        <div className="mb-2 font-semibold">Advanced (optional)</div>
+        <input
+          type="text"
+          value={poolAddress}
+          onChange={(e) => setPoolAddress(e.target.value)}
+          placeholder="Pool address (paste to execute a real swap)"
+          className="w-full mb-2 bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-500 outline-none"
+        />
+        <input
+          type="text"
+          value={userTokenAAccount}
+          onChange={(e) => setUserTokenAAccount(e.target.value)}
+          placeholder="Your token A account (associated token account)"
+          className="w-full mb-2 bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-500 outline-none"
+        />
+        <input
+          type="text"
+          value={userTokenBAccount}
+          onChange={(e) => setUserTokenBAccount(e.target.value)}
+          placeholder="Your token B account (associated token account)"
+          className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-500 outline-none"
+        />
+        <input
+          type="text"
+          value={tokenAVault}
+          onChange={(e) => setTokenAVault(e.target.value)}
+          placeholder="Pool Token A vault address"
+          className="w-full mt-2 bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-500 outline-none"
+        />
+        <input
+          type="text"
+          value={tokenBVault}
+          onChange={(e) => setTokenBVault(e.target.value)}
+          placeholder="Pool Token B vault address"
+          className="w-full mt-2 bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-500 outline-none"
+        />
+      </div>
+
       {/* Token selectors */}
       <TokenSelector
         open={selecting === 'from'}
@@ -243,6 +392,33 @@ export function SwapInterface() {
           if (fromAmount) setToAmount(calculateOutputAmount(fromAmount));
         }}
       />
+      {/* Programmatic Wallet Modal */}
+      {walletModalOpen && (
+        // import client-only component
+        // eslint-disable-next-line @next/next/no-img-element
+        <ProgrammaticWalletModal open={walletModalOpen} onClose={() => setWalletModalOpen(false)} />
+      )}
+      {txSignature && (
+        <div className="mt-3 p-3 bg-gray-800/40 rounded-lg text-sm">
+          <div className="text-gray-300">Transaction submitted</div>
+          <a
+            className="text-primary-400 underline"
+            href={`https://explorer.solana.com/tx/${txSignature}${process.env.NEXT_PUBLIC_NETWORK === 'devnet' ? '?cluster=devnet' : process.env.NEXT_PUBLIC_NETWORK === 'testnet' ? '?cluster=testnet' : ''}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            View on Solana Explorer
+          </a>
+        </div>
+      )}
+          <ConfirmTransactionModal
+            open={confirmOpen}
+            onClose={() => setConfirmOpen(false)}
+            tx={pendingTx}
+            summaryTitle="Confirm Swap"
+            summaryItems={summaryItems}
+            onConfirm={confirmAndSendPendingSwap}
+          />
     </div>
   );
 }

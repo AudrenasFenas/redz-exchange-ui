@@ -7,6 +7,7 @@ import { PoolInterface } from '@/components/PoolInterface';
 import { LaunchInterface } from '@/components/LaunchInterface';
 import { StatsPanel } from '@/components/StatsPanel';
 import { BalancesPanel } from '@/components/BalancesPanel';
+import { OpportunitiesPanel } from '@/components/OpportunitiesPanel';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'swap' | 'pool' | 'launch'>('swap');
@@ -46,6 +47,11 @@ export default function Home() {
         {/* Balances & Top-up */}
         <div className="max-w-6xl mx-auto">
           <BalancesPanel />
+        </div>
+
+        {/* Opportunities */}
+        <div className="max-w-6xl mx-auto">
+          <OpportunitiesPanel onAddLiquidity={() => setActiveTab('pool')} />
         </div>
 
         {/* Main Interface */}
@@ -115,6 +121,14 @@ export default function Home() {
               <p className="text-gray-400">Audited smart contracts with battle-tested security practices</p>
             </div>
           </div>
+        </div>
+
+        {/* Opportunities Section */}
+        <div className="max-w-4xl mx-auto mt-16">
+          <h2 className="text-3xl font-bold text-white text-center mb-12">
+            Explore Opportunities
+          </h2>
+          <OpportunitiesPanel />
         </div>
       </div>
     </main>

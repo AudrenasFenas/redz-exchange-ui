@@ -1,5 +1,5 @@
 import { Connection, ConnectionConfig } from '@solana/web3.js';
-import { RPC_ENDPOINTS, RPC_CONFIG, NETWORK } from './constants';
+import { RPC_ENDPOINTS, RPC_CONFIG, NETWORK, RPC_URL } from './constants';
 
 /**
  * RPC Connection Manager with automatic failover
@@ -11,13 +11,32 @@ export class RpcConnectionManager {
 
   constructor(network: string = NETWORK) {
     this.network = network;
+    // Log high-level info about endpoint configuration without revealing secrets.
+    const base = RPC_ENDPOINTS[this.network as keyof typeof RPC_ENDPOINTS] || [];
+    const overrideUsed = !!(RPC_URL && !base.includes(RPC_URL));
+    console.info(`[RpcConnectionManager] network=${this.network} endpoints=${base.length} override=${overrideUsed}`);
+  }
+
+  /**
+   * Return the effective endpoints for the current network.
+   * If `RPC_URL` override is set, prefer it first (but avoid duplicating).
+   */
+  private getEndpoints(): string[] {
+    const base = RPC_ENDPOINTS[this.network as keyof typeof RPC_ENDPOINTS] || [];
+    const endpoints = base.slice();
+
+    if (RPC_URL && !endpoints.includes(RPC_URL)) {
+      endpoints.unshift(RPC_URL);
+    }
+
+    return endpoints;
   }
 
   /**
    * Get connection with automatic failover
    */
   public getConnection(): Connection {
-    const endpoints = RPC_ENDPOINTS[this.network as keyof typeof RPC_ENDPOINTS];
+    const endpoints = this.getEndpoints();
     if (!endpoints || endpoints.length === 0) {
       throw new Error(`No RPC endpoints configured for network: ${this.network}`);
     }
@@ -40,7 +59,7 @@ export class RpcConnectionManager {
    * Switch to next RPC endpoint on failure
    */
   public failover(): Connection {
-    const endpoints = RPC_ENDPOINTS[this.network as keyof typeof RPC_ENDPOINTS];
+  const endpoints = this.getEndpoints();
     this.currentEndpointIndex = (this.currentEndpointIndex + 1) % endpoints.length;
     
     console.warn(`Switching to RPC endpoint: ${endpoints[this.currentEndpointIndex]}`);
@@ -51,7 +70,8 @@ export class RpcConnectionManager {
    * Test connection to RPC endpoint
    */
   public async testConnection(endpoint?: string): Promise<{ success: boolean; latency: number; error?: string }> {
-    const testEndpoint = endpoint || RPC_ENDPOINTS[this.network as keyof typeof RPC_ENDPOINTS][this.currentEndpointIndex];
+  const endpoints = this.getEndpoints();
+  const testEndpoint = endpoint || endpoints[this.currentEndpointIndex];
     const startTime = Date.now();
 
     try {
@@ -75,7 +95,7 @@ export class RpcConnectionManager {
    * Find fastest RPC endpoint
    */
   public async findFastestEndpoint(): Promise<string> {
-    const endpoints = RPC_ENDPOINTS[this.network as keyof typeof RPC_ENDPOINTS];
+    const endpoints = this.getEndpoints();
     const tests = await Promise.all(
       endpoints.map(async (endpoint) => ({
         endpoint,
@@ -110,7 +130,7 @@ export class RpcConnectionManager {
     latency: number;
     error?: string;
   }>> {
-    const endpoints = RPC_ENDPOINTS[this.network as keyof typeof RPC_ENDPOINTS];
+    const endpoints = this.getEndpoints();
     return Promise.all(
       endpoints.map(async (endpoint) => ({
         endpoint,
@@ -129,7 +149,35 @@ export class RpcConnectionManager {
 }
 
 // Export singleton instance
+/**
+ * Global RPC connection manager instance for handling remote procedure calls.
+ * 
+ * This singleton instance manages connections to RPC endpoints and provides
+ * a centralized way to handle RPC communications throughout the application.
+ * 
+ * @alchemyrpc
+ * ```typescript
+ * // Use the global RPC manager
+ * const result = await rpcManager.call('methodName', params);
+ * ```
+ */
 export const rpcManager = new RpcConnectionManager();
+
+/**
+ * Compute effective endpoints for a network, honoring runtime env override.
+ * Exported for unit tests.
+ */
+export function computeEndpointsForNetwork(network: string = NETWORK): string[] {
+  const override = process.env.NEXT_PUBLIC_RPC_URL || '';
+  const base = RPC_ENDPOINTS[network as keyof typeof RPC_ENDPOINTS] || [];
+  const endpoints = base.slice();
+
+  if (override && !endpoints.includes(override)) {
+    endpoints.unshift(override);
+  }
+
+  return endpoints;
+}
 
 /**
  * Get connection with retry logic

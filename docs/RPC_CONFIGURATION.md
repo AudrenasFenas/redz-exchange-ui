@@ -38,7 +38,7 @@ cp .env.template .env.local
 ### 💎 Premium Endpoints (Recommended for Production)
 
 #### Alchemy
-- **URL**: `https://solana-mainnet.g.alchemy.com/v2/YOUR_API_KEY`
+- **URL**: `https://solana-mainnet.g.alchemy.com/v2/Wt1fDpl-i0CUocrCJe0m1`
 - **Features**: High reliability, detailed analytics
 - **Pricing**: Free tier available
 - **Sign up**: [alchemy.com](https://alchemy.com)

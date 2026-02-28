@@ -1,4 +1,10 @@
 /** @type {import('next').NextConfig} */
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+// Compute directory name in ESM scope (avoid using __dirname directly)
+const projectRoot = dirname(fileURLToPath(import.meta.url));
+
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
@@ -37,7 +43,8 @@ const nextConfig = {
   // Turbopack configuration for Next.js 16+
   // Explicitly set root to avoid mis-detection when parent dirs contain lockfiles
   turbopack: {
-    root: __dirname,
+    // Use computed projectRoot instead of __dirname (not defined in ESM scope)
+    root: projectRoot,
   },
 
   // Fallback webpack config for compatibility
@@ -65,4 +72,4 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+export default nextConfig

@@ -3,12 +3,21 @@ export const PROGRAM_ID = process.env.NEXT_PUBLIC_PROGRAM_ID || '9HiX1zn36tRsmqJ
 export const NETWORK = process.env.NEXT_PUBLIC_NETWORK || 'mainnet';
 
 // RPC URL Configuration with fallbacks
+// Build Alchemy URLs from env when provided. NEVER commit your real API key to the repo.
+const ALCHEMY_KEY = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY || '';
+const ALCHEMY_MAINNET = ALCHEMY_KEY
+  ? `https://solana-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
+  : 'https://solana-mainnet.g.alchemy.com/v2/demo';
+const ALCHEMY_DEVNET = ALCHEMY_KEY
+  ? `https://solana-devnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
+  : 'https://solana-devnet.g.alchemy.com/v2/demo';
+
 export const RPC_ENDPOINTS = {
   mainnet: [
     // Primary high-performance RPC endpoints
     'https://solana-api.projectserum.com',
     'https://rpc.ankr.com/solana',
-    'https://solana-mainnet.g.alchemy.com/v2/demo',
+    ALCHEMY_MAINNET,
     'https://api.mainnet-beta.solana.com',
     // GenesysGo (Premium)
     'https://ssc-dao.genesysgo.net',
@@ -20,7 +29,7 @@ export const RPC_ENDPOINTS = {
   devnet: [
     'https://api.devnet.solana.com',
     'https://rpc.ankr.com/solana_devnet',
-    'https://solana-devnet.g.alchemy.com/v2/demo',
+    ALCHEMY_DEVNET,
   ],
   testnet: [
     'https://api.testnet.solana.com',
@@ -104,21 +113,22 @@ export const POPULAR_TOKENS: TokenInfo[] = [
     symbol: 'SOL',
     name: 'Wrapped SOL',
     decimals: 9,
-    logoURI: '/solana-logo.png'
+    // use local svg assets in public/logos
+    logoURI: '/logos/solana.svg'
   },
   {
     mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC mainnet
     symbol: 'USDC',
     name: 'USD Coin',
     decimals: 6,
-    logoURI: '/usdc-logo.png'
+    logoURI: '/logos/usdc.svg'
   },
   {
     mint: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB', // USDT mainnet
     symbol: 'USDT',
     name: 'Tether USD',
     decimals: 6,
-    logoURI: '/usdt-logo.png'
+    logoURI: '/logos/usdt.svg'
   }
 ];
 

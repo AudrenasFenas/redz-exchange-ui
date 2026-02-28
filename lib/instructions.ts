@@ -3,22 +3,18 @@ import { PROGRAM_ID, RedzInstruction } from './constants';
 
 // Create instruction to initialize config
 export function createInitializeConfigInstruction(
-  admin: PublicKey,
+  authority: PublicKey,
   config: PublicKey,
-  defaultFeeRate: number,
-  launchCreationFee: number,
-  minLiquidity: number
+  feeRate: number
 ): TransactionInstruction {
   const data = Buffer.concat([
     Buffer.from([RedzInstruction.InitializeConfig]),
-    Buffer.from(new Uint16Array([defaultFeeRate]).buffer),
-    Buffer.from(new BigUint64Array([BigInt(launchCreationFee)]).buffer),
-    Buffer.from(new BigUint64Array([BigInt(minLiquidity)]).buffer),
+    Buffer.from(new Uint16Array([feeRate]).buffer),
   ]);
 
   return new TransactionInstruction({
     keys: [
-      { pubkey: admin, isSigner: true, isWritable: true },
+      { pubkey: authority, isSigner: true, isWritable: true },
       { pubkey: config, isSigner: false, isWritable: true },
       { pubkey: new PublicKey('11111111111111111111111111111112'), isSigner: false, isWritable: false },
     ],
@@ -40,6 +36,8 @@ export function createPoolInstruction(
 ): TransactionInstruction {
   const data = Buffer.concat([
     Buffer.from([RedzInstruction.CreatePool]),
+    tokenAMint.toBuffer(),
+    tokenBMint.toBuffer(),
     Buffer.from(new Uint16Array([feeRate]).buffer),
   ]);
 
@@ -52,7 +50,9 @@ export function createPoolInstruction(
       { pubkey: tokenAVault, isSigner: false, isWritable: true },
       { pubkey: tokenBVault, isSigner: false, isWritable: true },
       { pubkey: lpTokenMint, isSigner: false, isWritable: true },
+      { pubkey: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'), isSigner: false, isWritable: false },
       { pubkey: new PublicKey('11111111111111111111111111111112'), isSigner: false, isWritable: false },
+      { pubkey: new PublicKey('SysvarRent111111111111111111111111111111111'), isSigner: false, isWritable: false },
     ],
     programId: new PublicKey(PROGRAM_ID),
     data,
@@ -63,10 +63,10 @@ export function createPoolInstruction(
 export function createSwapInstruction(
   user: PublicKey,
   pool: PublicKey,
-  userTokenAAccount: PublicKey,
-  userTokenBAccount: PublicKey,
-  tokenAVault: PublicKey,
-  tokenBVault: PublicKey,
+  userInput: PublicKey,
+  userOutput: PublicKey,
+  inputVault: PublicKey,
+  outputVault: PublicKey,
   amountIn: number,
   minimumAmountOut: number
 ): TransactionInstruction {
@@ -80,10 +80,10 @@ export function createSwapInstruction(
     keys: [
       { pubkey: user, isSigner: true, isWritable: false },
       { pubkey: pool, isSigner: false, isWritable: true },
-      { pubkey: userTokenAAccount, isSigner: false, isWritable: true },
-      { pubkey: userTokenBAccount, isSigner: false, isWritable: true },
-      { pubkey: tokenAVault, isSigner: false, isWritable: true },
-      { pubkey: tokenBVault, isSigner: false, isWritable: true },
+      { pubkey: userInput, isSigner: false, isWritable: true },
+      { pubkey: userOutput, isSigner: false, isWritable: true },
+      { pubkey: inputVault, isSigner: false, isWritable: true },
+      { pubkey: outputVault, isSigner: false, isWritable: true },
       { pubkey: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'), isSigner: false, isWritable: false },
     ],
     programId: new PublicKey(PROGRAM_ID),
@@ -96,13 +96,21 @@ export function createLaunchTokenInstruction(
   launcher: PublicKey,
   launch: PublicKey,
   tokenMint: PublicKey,
-  tokenAmount: number,
+  name: string,
+  symbol: string,
+  totalSupply: number,
   targetAmount: number,
   duration: number
 ): TransactionInstruction {
+  const nameBytes = Buffer.from(name);
+  const symbolBytes = Buffer.from(symbol);
   const data = Buffer.concat([
     Buffer.from([RedzInstruction.LaunchToken]),
-    Buffer.from(new BigUint64Array([BigInt(tokenAmount)]).buffer),
+    Buffer.from(new Uint32Array([nameBytes.length]).buffer),
+    nameBytes,
+    Buffer.from(new Uint32Array([symbolBytes.length]).buffer),
+    symbolBytes,
+    Buffer.from(new BigUint64Array([BigInt(totalSupply)]).buffer),
     Buffer.from(new BigUint64Array([BigInt(targetAmount)]).buffer),
     Buffer.from(new BigUint64Array([BigInt(duration)]).buffer),
   ]);
@@ -113,6 +121,38 @@ export function createLaunchTokenInstruction(
       { pubkey: launch, isSigner: false, isWritable: true },
       { pubkey: tokenMint, isSigner: false, isWritable: false },
       { pubkey: new PublicKey('11111111111111111111111111111112'), isSigner: false, isWritable: false },
+    ],
+    programId: new PublicKey(PROGRAM_ID),
+    data,
+  });
+}
+
+// Create instruction to add liquidity to a pool
+export function createAddLiquidityInstruction(
+  user: PublicKey,
+  pool: PublicKey,
+  userTokenA: PublicKey,
+  userTokenB: PublicKey,
+  tokenAVault: PublicKey,
+  tokenBVault: PublicKey,
+  amountA: number,
+  amountB: number
+): TransactionInstruction {
+  const data = Buffer.concat([
+    Buffer.from([RedzInstruction.AddLiquidity]),
+    Buffer.from(new BigUint64Array([BigInt(amountA)]).buffer),
+    Buffer.from(new BigUint64Array([BigInt(amountB)]).buffer),
+  ]);
+
+  return new TransactionInstruction({
+    keys: [
+      { pubkey: user, isSigner: true, isWritable: false },
+      { pubkey: pool, isSigner: false, isWritable: true },
+      { pubkey: userTokenA, isSigner: false, isWritable: true },
+      { pubkey: userTokenB, isSigner: false, isWritable: true },
+      { pubkey: tokenAVault, isSigner: false, isWritable: true },
+      { pubkey: tokenBVault, isSigner: false, isWritable: true },
+      { pubkey: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'), isSigner: false, isWritable: false },
     ],
     programId: new PublicKey(PROGRAM_ID),
     data,
